@@ -13,7 +13,7 @@ const newClothNo = document.getElementById('newClothNo');
 const newCF = document.getElementById('newCF');
 const clothList = document.getElementById('clothList');
 
-// 千分位格式化工具函数（仅用于显示）
+// 千分位格式化工具函数
 function formatNumber(num) {
   if (isNaN(num) || num === 0) return '';
   const parts = num.toString().split('.');
@@ -21,7 +21,7 @@ function formatNumber(num) {
   return parts.length > 1 ? parts.join('.') : parts[0];
 }
 
-// 反向处理：移除千分位符号转为数字（用于计算）
+// 反向处理：移除千分位符号转为数字
 function parseNumber(str) {
   if (!str || str.trim() === '') return 0;
   return parseFloat(str.replace(/,/g, '')) || 0;
@@ -93,7 +93,7 @@ clothNoInput.addEventListener('input', () => {
   }
 });
 
-// 查询C/F值（C/F值保留原始精度，不格式化千分位）
+// 查询C/F值
 function queryCFValue(clothNo) {
   const found = clothData.find(item => item.clothNo.toUpperCase() === clothNo.toUpperCase());
   if (found) {
@@ -106,7 +106,7 @@ function queryCFValue(clothNo) {
   }
 }
 
-// 计算逻辑（输入框保留原始输入，仅结果显示千分位）
+// 计算逻辑
 lengthInput.addEventListener('input', () => calculate('length'));
 weightInput.addEventListener('input', () => calculate('weight'));
 
@@ -128,13 +128,13 @@ function calculate(type) {
   if (type === 'length' && length > 0) {
     const calcWeight = Math.round(length / cf);
     const formattedWeight = formatNumber(calcWeight);
-    resultEl.textContent = `计算完成：${length}M ÷ ${cf} = ${formattedWeight}KG`;
-    weightInput.value = formattedWeight; // 结果显示千分位
+    weightInput.value = formattedWeight;
+    resultEl.textContent = `计算完成：${formatNumber(length)}M ÷ ${cf} = ${formattedWeight}KG`;
   } else if (type === 'weight' && weight > 0) {
     const calcLength = Math.round(weight * cf);
     const formattedLength = formatNumber(calcLength);
-    resultEl.textContent = `计算完成：${weight}KG × ${cf} = ${formattedLength}M`;
-    lengthInput.value = formattedLength; // 结果显示千分位
+    lengthInput.value = formattedLength;
+    resultEl.textContent = `计算完成：${formatNumber(weight)}KG × ${cf} = ${formattedLength}M`;
   } else if (length === 0 && weight === 0) {
     resultEl.textContent = '';
   }
