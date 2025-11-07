@@ -183,8 +183,21 @@ function updateClothCount() {
   clothCountEl.textContent = clothData.length;
 }
 
+// 新增：清空所有数据的函数（点击“清空”按钮触发）
+function clearAllData() {
+  // 1. 清空布号输入和验证提示
+  clothNoInput.value = '';
+  clothValidEl.className = 'hidden'; // 隐藏格式验证提示
+  // 2. 重置C/F值显示
+  cfValueEl.textContent = '未查询到';
+  // 3. 清空米长和重量输入
+  lengthInput.value = '';
+  weightInput.value = '';
+  // 4. 清空计算结果提示
+  resultEl.textContent = '';
+}
+
 // 页面初始化
 window.onload = function() {
   renderClothList();
-
 };
