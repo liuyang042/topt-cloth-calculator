@@ -13,7 +13,7 @@ const newClothNo = document.getElementById('newClothNo');
 const newCF = document.getElementById('newCF');
 const clothList = document.getElementById('clothList');
 
-// 布号配置数据（本地维护，可手动更新）
+// 布号配置数据
 let clothData = [
   { clothNo: "OD03186A", cf: 2.631952 },
   { clothNo: "OJ06827A", cf: 5.579954 },
@@ -81,7 +81,6 @@ clothNoInput.addEventListener('input', () => {
 
 // 查询C/F值
 function queryCFValue(clothNo) {
-  // 将输入的布号和配置中的布号都转为大写（或小写）后匹配
   const found = clothData.find(item => item.clothNo.toUpperCase() === clothNo.toUpperCase());
   if (found) {
     cfValueEl.textContent = found.cf;
@@ -113,19 +112,19 @@ function calculate(type) {
   }
 
   if (type === 'length' && length > 0) {
-    const calcWeight = length / cf;
-    weightInput.value = Math.round(calcWeight); // 取整
-    resultEl.textContent = `计算完成：${length}M ÷ ${cf} = ${Math.round(calcWeight)}KG`;
+    const calcWeight = Math.round(length / cf);
+    weightInput.value = calcWeight;
+    resultEl.textContent = `计算完成：${length}M ÷ ${cf} = ${calcWeight}KG`;
   } else if (type === 'weight' && weight > 0) {
-    const calcLength = weight * cf;
-    lengthInput.value = Math.round(calcLength); // 取整
-    resultEl.textContent = `计算完成：${weight}KG × ${cf} = ${Math.round(calcLength)}M`;
+    const calcLength = Math.round(weight * cf);
+    lengthInput.value = calcLength;
+    resultEl.textContent = `计算完成：${weight}KG × ${cf} = ${calcLength}M`;
   } else if (length === 0 && weight === 0) {
     resultEl.textContent = '';
   }
 }
 
-// 配置表管理（本地维护）
+// 配置表管理
 function addCloth() {
   const clothNo = newClothNo.value.trim();
   const cf = newCF.value.trim();
@@ -138,7 +137,6 @@ function addCloth() {
     alert('请输入有效的C/F值');
     return;
   }
-  // 不区分大小写检查布号是否已存在
   if (clothData.some(item => item.clothNo.toUpperCase() === clothNo.toUpperCase())) {
     alert('该布号已存在（不区分大小写）');
     return;
@@ -154,7 +152,7 @@ function deleteCloth(index) {
   if (confirm(`确定删除布号【${clothData[index].clothNo}】吗？`)) {
     clothData.splice(index, 1);
     renderClothList();
-    if (clothNoInput.value === clothData[index]?.clothNo) {
+    if (clothNoInput.value.toUpperCase() === clothData[index]?.clothNo.toUpperCase()) {
       cfValueEl.textContent = '未查询到';
     }
   }
@@ -183,18 +181,14 @@ function updateClothCount() {
   clothCountEl.textContent = clothData.length;
 }
 
-// 新增：清空所有数据的函数（点击“清空”按钮触发）
+// 清空所有输入数据的函数
 function clearAllData() {
-  // 1. 清空布号输入和验证提示
-  clothNoInput.value = '';
+  clothNoInput.value = '';     // 清空布号
+  lengthInput.value = '';     // 清空米长
+  weightInput.value = '';     // 清空重量
+  cfValueEl.textContent = '未查询到'; // 重置C/F值显示
+  resultEl.textContent = '';  // 清空计算结果
   clothValidEl.className = 'hidden'; // 隐藏格式验证提示
-  // 2. 重置C/F值显示
-  cfValueEl.textContent = '未查询到';
-  // 3. 清空米长和重量输入
-  lengthInput.value = '';
-  weightInput.value = '';
-  // 4. 清空计算结果提示
-  resultEl.textContent = '';
 }
 
 // 页面初始化
