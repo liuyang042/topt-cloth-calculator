@@ -39,13 +39,14 @@
 <body class="bg-gradient-to-br from-neutral to-blue-50 min-h-screen p-4 md:p-8 font-inter">
   <!-- 主卡片 -->
   <div class="max-w-md mx-auto bg-white rounded-2xl overflow-hidden card-shadow">
-    <!-- 头部区域（手机端优化：作者信息在标题下方） -->
+    <!-- 头部区域（作者和部门在标题下方同一行靠右） -->
     <div class="bg-gradient-to-r from-primary to-secondary p-5 text-white">
-      <div class="flex items-center mb-3"> <!-- 图标+标题横向排列 -->
+      <div class="flex items-center mb-2"> <!-- 图标+标题 -->
         <img src="logo.png" alt="公司标识" class="h-10 w-10 rounded-lg mr-3">
         <h1 class="text-xl md:text-2xl font-bold">TOPT 布号计算器</h1>
       </div>
-      <div class="text-sm opacity-90"> <!-- 作者信息纵向排列在标题下方 -->
+      <!-- 作者和部门同一行靠右对齐 -->
+      <div class="flex justify-end text-sm opacity-90 space-x-4">
         <p>作者：刘洋</p>
         <p>部门：CPO</p>
       </div>
