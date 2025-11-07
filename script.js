@@ -81,7 +81,8 @@ clothNoInput.addEventListener('input', () => {
 
 // 查询C/F值
 function queryCFValue(clothNo) {
-  const found = clothData.find(item => item.clothNo === clothNo);
+  // 将输入的布号和配置中的布号都转为大写（或小写）后匹配
+  const found = clothData.find(item => item.clothNo.toUpperCase() === clothNo.toUpperCase());
   if (found) {
     cfValueEl.textContent = found.cf;
     if (lengthInput.value) calculate('length');
@@ -113,12 +114,12 @@ function calculate(type) {
 
   if (type === 'length' && length > 0) {
     const calcWeight = length / cf;
-    weightInput.value = calcWeight.toFixed(2);
-    resultEl.textContent = `计算完成：${length}M ÷ ${cf} = ${calcWeight.toFixed(2)}KG`;
+    weightInput.value = Math.round(calcWeight); // 取整
+    resultEl.textContent = `计算完成：${length}M ÷ ${cf} = ${Math.round(calcWeight)}KG`;
   } else if (type === 'weight' && weight > 0) {
     const calcLength = weight * cf;
-    lengthInput.value = calcLength.toFixed(2);
-    resultEl.textContent = `计算完成：${weight}KG × ${cf} = ${calcLength.toFixed(2)}M`;
+    lengthInput.value = Math.round(calcLength); // 取整
+    resultEl.textContent = `计算完成：${weight}KG × ${cf} = ${Math.round(calcLength)}M`;
   } else if (length === 0 && weight === 0) {
     resultEl.textContent = '';
   }
@@ -137,8 +138,9 @@ function addCloth() {
     alert('请输入有效的C/F值');
     return;
   }
-  if (clothData.some(item => item.clothNo === clothNo)) {
-    alert('该布号已存在');
+  // 不区分大小写检查布号是否已存在
+  if (clothData.some(item => item.clothNo.toUpperCase() === clothNo.toUpperCase())) {
+    alert('该布号已存在（不区分大小写）');
     return;
   }
 
@@ -186,3 +188,4 @@ window.onload = function() {
   renderClothList();
 
 };
+
