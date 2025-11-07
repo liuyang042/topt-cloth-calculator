@@ -3,8 +3,14 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TOPT 布号计算器</title>
+  <!-- 引入样式框架 -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入图标库 -->
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 引入Firebase（云端数据库） -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+  <!-- 自定义样式 -->
   <style type="text/tailwindcss">
     @layer utilities {
       .input-focus {
@@ -16,56 +22,78 @@
     }
   </style>
   <script>
+    // 配置Tailwind主题
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#1E40AF',
-            secondary: '#3B82F6',
+            primary: '#1E40AF', // 深蓝色主色调
+            secondary: '#3B82F6', // 浅蓝色辅助色
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
           },
         },
       }
     }
   </script>
 </head>
+
 <body class="bg-gray-50 min-h-screen p-4 md:p-8">
+  <!-- 容器：适配手机和电脑 -->
   <div class="max-w-md mx-auto bg-white rounded-xl overflow-hidden card-shadow">
-    <!-- 头部 -->
+    <!-- 头部区域：公司标识和标题 -->
     <div class="bg-primary p-4 text-white">
       <div class="flex items-center justify-between">
-        <img src="logo.png" alt="TOP Textiles" class="h-10">
+        <!-- 公司标识 -->
+        <img src="logo.png" alt="公司标识" class="h-10">
+        <!-- 标题 -->
         <h1 class="text-xl font-bold">TOPT 布号计算器</h1>
       </div>
     </div>
+
+    <!-- 作者信息 -->
     <div class="bg-gray-50 px-4 py-2 text-right text-gray-600 text-sm">
       作者：刘洋 | 部门：CPO
     </div>
 
     <!-- 计算区域 -->
     <div class="p-6">
+      <!-- 布号输入（新增清空按钮） -->
       <div class="mb-5">
-        <label class="block text-gray-700 mb-2 font-medium">布号（8位，如ZJ14299A）</label>
+        <label class="block text-gray-700 mb-2 font-medium">布号（8位，例如ZJ14299A）</label>
         <div class="relative">
-          <input type="text" id="clothNo" placeholder="输入8位布号" 
+          <input type="text" id="clothNo" placeholder="请输入8位布号" 
                  class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
-                 maxlength="8">
+                 maxlength="8"> <!-- 限制8位输入 -->
+          <!-- 新增清空按钮：位于输入框右侧，布号验证提示左侧 -->
+          <button id="clearBtn" onclick="clearAllData()" 
+                  class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500 text-sm">
+            清空
+          </button>
           <span id="clothValid" class="hidden absolute right-3 top-3 text-sm"></span>
         </div>
       </div>
+
+      <!-- C/F值显示 -->
       <div class="mb-5">
         <label class="block text-gray-700 mb-2 font-medium">C/F值</label>
         <div class="bg-gray-50 px-4 py-3 border border-gray-300 rounded-lg">
           <span id="cfValue" class="text-lg font-medium text-primary">未查询到</span>
         </div>
       </div>
+
+      <!-- 米长输入 -->
       <div class="mb-5">
         <label class="block text-gray-700 mb-2 font-medium">
           <i class="fa fa-arrows-h mr-2"></i>米长（M）
         </label>
         <input type="number" id="length" placeholder="输入米长" 
                class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
-               step="0.01">
+               step="0.01"> <!-- 支持小数点后两位 -->
       </div>
+
+      <!-- 重量输入 -->
       <div class="mb-5">
         <label class="block text-gray-700 mb-2 font-medium">
           <i class="fa fa-balance-scale mr-2"></i>重量（KG）
@@ -74,28 +102,34 @@
                class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
                step="0.01">
       </div>
+
+      <!-- 计算结果提示 -->
       <div id="result" class="text-center py-2 text-gray-600"></div>
     </div>
 
-    <!-- 配置表管理（简化版，手动维护配置） -->
+    <!-- 配置表管理区域（折叠面板） -->
     <div class="border-t border-gray-100">
       <button id="configToggle" class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50">
         <span class="font-medium">布号配置管理</span>
         <i class="fa fa-chevron-down transition-transform duration-300" id="configIcon"></i>
       </button>
+
       <div id="configPanel" class="hidden p-4 bg-gray-50 border-t border-gray-100">
+        <!-- 新增布号 -->
         <div class="mb-4 p-3 bg-white rounded-lg">
           <h3 class="font-medium mb-3 text-gray-800">新增布号配置</h3>
           <input type="text" id="newClothNo" placeholder="8位布号" 
                  class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus"
                  maxlength="8">
-          <input type="number" id="newCF" placeholder="C/F值（如2.86523）" 
+          <input type="number" id="newCF" placeholder="C/F值（例如2.86523）" 
                  class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus"
                  step="0.00001">
           <button onclick="addCloth()" class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition-colors">
             <i class="fa fa-plus mr-1"></i>添加配置
           </button>
         </div>
+
+        <!-- 配置列表 -->
         <div>
           <h3 class="font-medium mb-3 text-gray-800">已配置布号（共<span id="clothCount">0</span>条）</h3>
           <div class="max-h-40 overflow-y-auto bg-white rounded-lg">
@@ -108,25 +142,7 @@
                 </tr>
               </thead>
               <tbody id="clothList">
-                <!-- 初始示例配置 -->
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                  <td class="px-3 py-2">ZJ14299A</td>
-                  <td class="px-3 py-2">5.13344</td>
-                  <td class="px-3 py-2 text-center">
-                    <button onclick="deleteCloth(0)" class="text-red-500 hover:text-red-700">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                  <td class="px-3 py-2">OD03186A</td>
-                  <td class="px-3 py-2">2.86523</td>
-                  <td class="px-3 py-2 text-center">
-                    <button onclick="deleteCloth(1)" class="text-red-500 hover:text-red-700">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
+                <!-- 配置列表将动态生成 -->
               </tbody>
             </table>
           </div>
@@ -134,6 +150,7 @@
       </div>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
