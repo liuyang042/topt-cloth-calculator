@@ -13,24 +13,22 @@ const newClothNo = document.getElementById('newClothNo');
 const newCF = document.getElementById('newCF');
 const clothList = document.getElementById('clothList');
 
-// 千分位格式化工具函数
+// 千分位格式化工具函数（仅用于显示）
 function formatNumber(num) {
-  if (isNaN(num) || num === '') return '';
-  // 处理整数和小数部分
+  if (isNaN(num) || num === '' || num === 0) return '';
   const parts = num.toString().split('.');
-  // 整数部分添加千分位
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  // 拼接结果（保留最多6位小数，C/F值精度需求）
   return parts.length > 1 ? parts.join('.') : parts[0];
 }
 
-// 反向处理：移除千分位符号转为数字
+// 反向处理：移除千分位符号转为数字（核心修正：确保能解析带逗号的数值）
 function parseNumber(str) {
-  if (!str) return 0;
-  return parseFloat(str.replace(/,/g, ''));
+  if (!str || str.trim() === '') return 0;
+  // 先移除所有逗号，再转为数字
+  return parseFloat(str.replace(/,/g, '')) || 0;
 }
 
-// 布号配置数据（本地维护，可手动更新）
+// 布号配置数据
 let clothData = [
   { clothNo: "OD03186A", cf: 2.631952 },
   { clothNo: "OJ06827A", cf: 5.579954 },
@@ -96,11 +94,33 @@ clothNoInput.addEventListener('input', () => {
   }
 });
 
-// 查询C/F值（带千分位显示）
+// 监听米长输入，实时格式化（核心修正：输入时自动添加千分位，同时保留原始值用于计算）
+lengthInput.addEventListener('input', function() {
+  const rawValue = this.value.replace(/,/g, ''); // 移除逗号后的原始值
+  if (rawValue) {
+    this.value = formatNumber(parseFloat(rawValue)); // 格式化后显示
+  } else {
+    this.value = '';
+  }
+  calculate('length'); // 触发计算
+});
+
+// 监听重量输入，实时格式化
+weightInput.addEventListener('input', function() {
+  const rawValue = this.value.replace(/,/g, '');
+  if (rawValue) {
+    this.value = formatNumber(parseFloat(rawValue));
+  } else {
+    this.value = '';
+  }
+  calculate('weight'); // 触发计算
+});
+
+// 查询C/F值
 function queryCFValue(clothNo) {
   const found = clothData.find(item => item.clothNo.toUpperCase() === clothNo.toUpperCase());
   if (found) {
-    cfValueEl.textContent = formatNumber(found.cf); // 格式化C/F值
+    cfValueEl.textContent = formatNumber(found.cf);
     if (lengthInput.value) calculate('length');
     if (weightInput.value) calculate('weight');
   } else {
@@ -109,15 +129,12 @@ function queryCFValue(clothNo) {
   }
 }
 
-// 计算逻辑（带千分位处理）
-lengthInput.addEventListener('input', () => calculate('length'));
-weightInput.addEventListener('input', () => calculate('weight'));
-
+// 计算逻辑（核心修正：确保解析带千分位的数值）
 function calculate(type) {
   const clothNo = clothNoInput.value.trim();
-  const cf = parseNumber(cfValueEl.textContent); // 解析千分位后的C/F值
-  const length = parseNumber(lengthInput.value); // 解析千分位后的米长
-  const weight = parseNumber(weightInput.value); // 解析千分位后的重量
+  const cf = parseNumber(cfValueEl.textContent); // 解析C/F值（处理千分位）
+  const length = parseNumber(lengthInput.value); // 解析米长（处理千分位）
+  const weight = parseNumber(weightInput.value); // 解析重量（处理千分位）
 
   if (!clothNo || clothNo.length !== 8) {
     resultEl.textContent = '请先输入8位布号';
@@ -129,19 +146,19 @@ function calculate(type) {
   }
 
   if (type === 'length' && length > 0) {
-    const calcWeight = Math.round(length / cf); // 取整后计算
-    weightInput.value = formatNumber(calcWeight); // 千分位显示结果
+    const calcWeight = Math.round(length / cf);
+    weightInput.value = formatNumber(calcWeight); // 格式化结果
     resultEl.textContent = `计算完成：${formatNumber(length)}M ÷ ${formatNumber(cf)} = ${formatNumber(calcWeight)}KG`;
   } else if (type === 'weight' && weight > 0) {
-    const calcLength = Math.round(weight * cf); // 取整后计算
-    lengthInput.value = formatNumber(calcLength); // 千分位显示结果
+    const calcLength = Math.round(weight * cf);
+    lengthInput.value = formatNumber(calcLength); // 格式化结果
     resultEl.textContent = `计算完成：${formatNumber(weight)}KG × ${formatNumber(cf)} = ${formatNumber(calcLength)}M`;
   } else if (length === 0 && weight === 0) {
     resultEl.textContent = '';
   }
 }
 
-// 配置表管理（带千分位显示）
+// 配置表管理
 function addCloth() {
   const clothNo = newClothNo.value.trim();
   const cf = newCF.value.trim();
@@ -175,7 +192,6 @@ function deleteCloth(index) {
   }
 }
 
-// 渲染配置列表（带千分位显示）
 function renderClothList() {
   clothList.innerHTML = '';
   clothData.forEach((item, index) => {
@@ -183,7 +199,7 @@ function renderClothList() {
     row.className = 'border-b border-gray-100 hover:bg-gray-50';
     row.innerHTML = `
       <td class="px-3 py-2">${item.clothNo}</td>
-      <td class="px-3 py-2">${formatNumber(item.cf)}</td> <!-- 千分位显示C/F值 -->
+      <td class="px-3 py-2">${formatNumber(item.cf)}</td>
       <td class="px-3 py-2 text-center">
         <button onclick="deleteCloth(${index})" class="text-red-500 hover:text-red-700">
           <i class="fa fa-trash"></i>
