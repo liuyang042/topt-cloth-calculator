@@ -11,7 +11,10 @@
         @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent;
       }
       .card-shadow {
-        @apply shadow-lg shadow-blue-100;
+        @apply shadow-lg shadow-blue-100/30 hover:shadow-xl hover:shadow-blue-100/50 transition-shadow duration-300;
+      }
+      .btn-hover {
+        @apply hover:bg-blue-600 hover:text-white transition-all duration-200;
       }
     }
   </style>
@@ -20,8 +23,12 @@
       theme: {
         extend: {
           colors: {
-            primary: '#1E40AF',
-            secondary: '#3B82F6',
+            primary: '#165DFF',
+            secondary: '#36BFFA',
+            neutral: '#F5F7FA',
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
           },
         },
       }
@@ -29,93 +36,101 @@
   </script>
 </head>
 
-<body class="bg-gray-50 min-h-screen p-4 md:p-8">
-  <div class="max-w-md mx-auto bg-white rounded-xl overflow-hidden card-shadow">
+<body class="bg-gradient-to-br from-neutral to-blue-50 min-h-screen p-4 md:p-8 font-inter">
+  <!-- 主卡片 -->
+  <div class="max-w-md mx-auto bg-white rounded-2xl overflow-hidden card-shadow">
     <!-- 头部区域 -->
-    <div class="bg-primary p-4 text-white">
+    <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white">
       <div class="flex items-center justify-between">
-        <img src="logo.png" alt="公司标识" class="h-10">
-        <h1 class="text-xl font-bold">TOPT 布号计算器</h1>
+        <div class="flex items-center">
+          <img src="logo.png" alt="公司标识" class="h-10 w-10 rounded-lg mr-3">
+          <h1 class="text-2xl font-bold">TOPT 布号计算器</h1>
+        </div>
+        <div class="text-right">
+          <p class="text-sm opacity-90">作者：刘洋</p>
+          <p class="text-sm opacity-90">部门：CPO</p>
+        </div>
       </div>
-    </div>
-    <div class="bg-gray-50 px-4 py-2 text-right text-gray-600 text-sm">
-      作者：刘洋 | 部门：CPO
     </div>
 
     <!-- 计算区域 -->
     <div class="p-6">
-      <!-- 布号输入（清空按钮在文字右侧） -->
-      <div class="mb-5">
-        <div class="flex items-center justify-between">
-          <label class="block text-gray-700 font-medium">布号（8位，例如ZJ14299A）</label>
-          <!-- 清空按钮放在文字最右侧 -->
+      <!-- 布号输入（带清空按钮） -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-gray-700 font-medium">布号（8位，例如ZJ14299A）</label>
           <button id="clearBtn" onclick="clearAllData()" 
-                  class="text-gray-500 hover:text-red-500 text-sm">
+                  class="text-gray-500 hover:text-primary text-sm btn-hover px-2 py-1 rounded">
             清空
           </button>
         </div>
         <div class="relative">
           <input type="text" id="clothNo" placeholder="请输入8位布号" 
-                 class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
-                 maxlength="8">
-          <span id="clothValid" class="hidden absolute right-3 top-3 text-sm"></span>
+                 class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
+          <span id="clothValid" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm"></span>
         </div>
       </div>
 
       <!-- C/F值显示 -->
-      <div class="mb-5">
+      <div class="mb-6">
         <label class="block text-gray-700 mb-2 font-medium">C/F值</label>
-        <div class="bg-gray-50 px-4 py-3 border border-gray-300 rounded-lg">
+        <div class="px-4 py-3 border border-gray-200 rounded-lg bg-neutral">
           <span id="cfValue" class="text-lg font-medium text-primary">未查询到</span>
         </div>
       </div>
 
       <!-- 米长输入 -->
-      <div class="mb-5">
+      <div class="mb-6">
         <label class="block text-gray-700 mb-2 font-medium">
-          <i class="fa fa-arrows-h mr-2"></i>米长（M）
+          <i class="fa fa-arrows-h mr-2 text-primary"></i>米长（M）
         </label>
         <input type="number" id="length" placeholder="输入米长" 
-               class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
-               step="0.01">
+               class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
       </div>
 
       <!-- 重量输入 -->
-      <div class="mb-5">
+      <div class="mb-6">
         <label class="block text-gray-700 mb-2 font-medium">
-          <i class="fa fa-balance-scale mr-2"></i>重量（KG）
+          <i class="fa fa-balance-scale mr-2 text-primary"></i>重量（KG）
         </label>
         <input type="number" id="weight" placeholder="输入重量" 
-               class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
-               step="0.01">
+               class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
       </div>
 
       <!-- 计算结果提示 -->
-      <div id="result" class="text-center py-2 text-gray-600"></div>
+      <div id="result" class="text-center py-3 text-gray-600 font-medium"></div>
     </div>
 
     <!-- 配置表管理区域 -->
-    <div class="border-t border-gray-100">
-      <button id="configToggle" class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50">
-        <span class="font-medium">布号配置管理</span>
+    <div class="border-t border-gray-200">
+      <button id="configToggle" class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50 transition-colors">
+        <span class="font-medium flex items-center">
+          <i class="fa fa-cog mr-2 text-primary"></i>布号配置管理
+        </span>
         <i class="fa fa-chevron-down transition-transform duration-300" id="configIcon"></i>
       </button>
-      <div id="configPanel" class="hidden p-4 bg-gray-50 border-t border-gray-100">
-        <div class="mb-4 p-3 bg-white rounded-lg">
-          <h3 class="font-medium mb-3 text-gray-800">新增布号配置</h3>
+
+      <div id="configPanel" class="hidden p-4 bg-gray-50 border-t border-gray-200">
+        <!-- 新增布号 -->
+        <div class="mb-4 p-3 bg-white rounded-lg card-shadow">
+          <h3 class="font-medium mb-3 text-gray-800 flex items-center">
+            <i class="fa fa-plus-circle mr-2 text-primary"></i>新增布号配置
+          </h3>
           <input type="text" id="newClothNo" placeholder="8位布号" 
-                 class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus"
-                 maxlength="8">
+                 class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus">
           <input type="number" id="newCF" placeholder="C/F值（例如2.86523）" 
-                 class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus"
-                 step="0.00001">
-          <button onclick="addCloth()" class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition-colors">
+                 class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus">
+          <button onclick="addCloth()" class="w-full bg-primary text-white py-2 rounded btn-hover">
             <i class="fa fa-plus mr-1"></i>添加配置
           </button>
         </div>
+
+        <!-- 配置列表 -->
         <div>
-          <h3 class="font-medium mb-3 text-gray-800">已配置布号（共<span id="clothCount">0</span>条）</h3>
-          <div class="max-h-40 overflow-y-auto bg-white rounded-lg">
+          <h3 class="font-medium mb-3 text-gray-800 flex items-center">
+            <i class="fa fa-list-alt mr-2 text-primary"></i>已配置布号（共<span id="clothCount">0</span>条）
+          </h3>
+          <div class="max-h-40 overflow-y-auto bg-white rounded-lg card-shadow">
             <table class="w-full text-sm">
               <thead class="bg-gray-50">
                 <tr>
