@@ -15,8 +15,44 @@ const clothList = document.getElementById('clothList');
 
 // 布号配置数据（本地维护，可手动更新）
 let clothData = [
-  { clothNo: "ZJ14299A", cf: 5.13344 },
-  { clothNo: "OD03186A", cf: 2.86523 }
+  { clothNo: "OD03186A", cf: 2.631952 },
+  { clothNo: "OJ06827A", cf: 5.579954 },
+  { clothNo: "OJ08247A", cf: 2.973133 },
+  { clothNo: "OJ08248A", cf: 2.828389 },
+  { clothNo: "OJ08349A", cf: 3.626297 },
+  { clothNo: "OJ08415A", cf: 2.973133 },
+  { clothNo: "OR05890A", cf: 2.471601 },
+  { clothNo: "YH00052A", cf: 3.128636 },
+  { clothNo: "YH00064A", cf: 3.128636 },
+  { clothNo: "ZH00050A", cf: 2.278241 },
+  { clothNo: "ZH00063A", cf: 2.278241 },
+  { clothNo: "ZH00052A", cf: 3.128636 },
+  { clothNo: "ZH00064A", cf: 3.128636 },
+  { clothNo: "ZHP0026A", cf: 2.676390 },
+  { clothNo: "ZHP0041A", cf: 2.585356 },
+  { clothNo: "ZHP0045A", cf: 2.585356 },
+  { clothNo: "ZHP0051A", cf: 2.702433 },
+  { clothNo: "ZJ13848A", cf: 4.643133 },
+  { clothNo: "ZJ13973A", cf: 4.133650 },
+  { clothNo: "ZJ13975A", cf: 3.856239 },
+  { clothNo: "ZJ14148A", cf: 5.889548 },
+  { clothNo: "ZJ14150A", cf: 5.846499 },
+  { clothNo: "ZJ14224A", cf: 5.812916 },
+  { clothNo: "ZJ14239A", cf: 5.542249 },
+  { clothNo: "ZJ14299A", cf: 5.330976 },
+  { clothNo: "ZJ15057A", cf: 5.330976 },
+  { clothNo: "ZJ14500A", cf: 5.812916 },
+  { clothNo: "ZJ14501A", cf: 5.889548 },
+  { clothNo: "ZJ14582A", cf: 5.812916 },
+  { clothNo: "ZJ14764A", cf: 5.542249 },
+  { clothNo: "ZN02320A", cf: 2.749641 },
+  { clothNo: "ZN02331A", cf: 2.889161 },
+  { clothNo: "ZN02340A", cf: 2.749641 },
+  { clothNo: "ZN02342A", cf: 2.806048 },
+  { clothNo: "ZRP0012A", cf: 3.355431 },
+  { clothNo: "ZRP0014A", cf: 4.381832 },
+  { clothNo: "ZRP0026A", cf: 2.997741 },
+  { clothNo: "ZRP0030A", cf: 4.351556 },
 ];
 
 // 配置面板折叠/展开
@@ -148,4 +184,5 @@ function updateClothCount() {
 // 页面初始化
 window.onload = function() {
   renderClothList();
+
 };
