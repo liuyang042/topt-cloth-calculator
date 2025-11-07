@@ -106,9 +106,26 @@ function queryCFValue(clothNo) {
   }
 }
 
-// 计算逻辑
-lengthInput.addEventListener('input', () => calculate('length'));
-weightInput.addEventListener('input', () => calculate('weight'));
+// 计算逻辑（核心修正：确保输入框和结果同时显示千分位）
+lengthInput.addEventListener('input', function() {
+  const rawValue = this.value.replace(/,/g, '');
+  if (rawValue) {
+    this.value = formatNumber(parseFloat(rawValue));
+  } else {
+    this.value = '';
+  }
+  calculate('length');
+});
+
+weightInput.addEventListener('input', function() {
+  const rawValue = this.value.replace(/,/g, '');
+  if (rawValue) {
+    this.value = formatNumber(parseFloat(rawValue));
+  } else {
+    this.value = '';
+  }
+  calculate('weight');
+});
 
 function calculate(type) {
   const clothNo = clothNoInput.value.trim();
