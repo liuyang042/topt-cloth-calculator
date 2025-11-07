@@ -13,12 +13,18 @@ const newClothNo = document.getElementById('newClothNo');
 const newCF = document.getElementById('newCF');
 const clothList = document.getElementById('clothList');
 
-// 千分位格式化工具函数（仅用于计算结果显示）
+// 千分位格式化工具函数
 function formatNumber(num) {
   if (isNaN(num) || num === 0) return '';
   const parts = num.toString().split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return parts.length > 1 ? parts.join('.') : parts[0];
+}
+
+// 反向处理：移除千分位符号转为数字
+function parseNumber(str) {
+  if (!str || str.trim() === '') return 0;
+  return parseFloat(str.replace(/,/g, '')) || 0;
 }
 
 // 布号配置数据
@@ -87,11 +93,33 @@ clothNoInput.addEventListener('input', () => {
   }
 });
 
-// 查询C/F值（C/F值显示千分位）
+// 监听米长输入，实时格式化
+lengthInput.addEventListener('input', function() {
+  const rawValue = this.value.replace(/,/g, '');
+  if (rawValue) {
+    this.value = formatNumber(parseFloat(rawValue));
+  } else {
+    this.value = '';
+  }
+  calculate('length');
+});
+
+// 监听重量输入，实时格式化
+weightInput.addEventListener('input', function() {
+  const rawValue = this.value.replace(/,/g, '');
+  if (rawValue) {
+    this.value = formatNumber(parseFloat(rawValue));
+  } else {
+    this.value = '';
+  }
+  calculate('weight');
+});
+
+// 查询C/F值（C/F值显示原始精度，不格式化千分位）
 function queryCFValue(clothNo) {
   const found = clothData.find(item => item.clothNo.toUpperCase() === clothNo.toUpperCase());
   if (found) {
-    cfValueEl.textContent = found.cf; // C/F值保留原始精度，不格式化千分位（避免解析问题）
+    cfValueEl.textContent = found.cf;
     if (lengthInput.value) calculate('length');
     if (weightInput.value) calculate('weight');
   } else {
@@ -100,15 +128,12 @@ function queryCFValue(clothNo) {
   }
 }
 
-// 计算逻辑（仅结果添加千分位）
-lengthInput.addEventListener('input', () => calculate('length'));
-weightInput.addEventListener('input', () => calculate('weight'));
-
+// 计算逻辑
 function calculate(type) {
   const clothNo = clothNoInput.value.trim();
-  const cf = parseFloat(cfValueEl.textContent); // 直接解析原始C/F值
-  const length = parseFloat(lengthInput.value) || 0; // 输入框保留原始数字，直接解析
-  const weight = parseFloat(weightInput.value) || 0; // 输入框保留原始数字，直接解析
+  const cf = parseNumber(cfValueEl.textContent);
+  const length = parseNumber(lengthInput.value);
+  const weight = parseNumber(weightInput.value);
 
   if (!clothNo || clothNo.length !== 8) {
     resultEl.textContent = '请先输入8位布号';
@@ -120,15 +145,13 @@ function calculate(type) {
   }
 
   if (type === 'length' && length > 0) {
-    const calcWeight = Math.round(length / cf); // 取整
-    const formattedWeight = formatNumber(calcWeight); // 结果添加千分位
-    weightInput.value = calcWeight; // 输入框显示原始数字（方便后续修改）
-    resultEl.textContent = `计算完成：${length}M ÷ ${cf} = ${formattedWeight}KG`;
+    const calcWeight = Math.round(length / cf);
+    weightInput.value = formatNumber(calcWeight);
+    resultEl.textContent = `计算完成：${formatNumber(length)}M ÷ ${cf} = ${formatNumber(calcWeight)}KG`;
   } else if (type === 'weight' && weight > 0) {
-    const calcLength = Math.round(weight * cf); // 取整
-    const formattedLength = formatNumber(calcLength); // 结果添加千分位
-    lengthInput.value = calcLength; // 输入框显示原始数字（方便后续修改）
-    resultEl.textContent = `计算完成：${weight}KG × ${cf} = ${formattedLength}M`;
+    const calcLength = Math.round(weight * cf);
+    lengthInput.value = formatNumber(calcLength);
+    resultEl.textContent = `计算完成：${formatNumber(weight)}KG × ${cf} = ${formatNumber(calcLength)}M`;
   } else if (length === 0 && weight === 0) {
     resultEl.textContent = '';
   }
@@ -175,7 +198,7 @@ function renderClothList() {
     row.className = 'border-b border-gray-100 hover:bg-gray-50';
     row.innerHTML = `
       <td class="px-3 py-2">${item.clothNo}</td>
-      <td class="px-3 py-2">${item.cf}</td> <!-- 配置表C/F值保留原始精度 -->
+      <td class="px-3 py-2">${item.cf}</td>
       <td class="px-3 py-2 text-center">
         <button onclick="deleteCloth(${index})" class="text-red-500 hover:text-red-700">
           <i class="fa fa-trash"></i>
