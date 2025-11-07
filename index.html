@@ -13,13 +13,6 @@
       .card-shadow {
         @apply shadow-lg shadow-blue-100;
       }
-      .fade-in {
-        animation: fadeIn 0.3s ease-in-out;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
     }
   </style>
   <script>
@@ -40,9 +33,7 @@
     <!-- 头部 -->
     <div class="bg-primary p-4 text-white">
       <div class="flex items-center justify-between">
-        <div class="h-10 w-10 bg-white rounded-full flex items-center justify-center">
-          <span class="text-primary font-bold text-lg">T</span>
-        </div>
+        <img src="logo.png" alt="TOP Textiles" class="h-10">
         <h1 class="text-xl font-bold">TOPT 布号计算器</h1>
       </div>
     </div>
@@ -83,22 +74,10 @@
                class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
                step="0.01">
       </div>
-      
-      <!-- 结果显示区域 -->
-      <div id="result" class="text-center py-2 text-gray-600 mb-4"></div>
-      
-      <!-- 快捷操作按钮 -->
-      <div class="flex space-x-3">
-        <button id="clearAll" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors">
-          <i class="fa fa-trash mr-1"></i>清空所有
-        </button>
-        <button id="calculateBtn" class="flex-1 bg-secondary text-white py-2 rounded-lg hover:bg-primary transition-colors">
-          <i class="fa fa-calculator mr-1"></i>计算
-        </button>
-      </div>
+      <div id="result" class="text-center py-2 text-gray-600"></div>
     </div>
 
-    <!-- 配置表管理 -->
+    <!-- 配置表管理（简化版，手动维护配置） -->
     <div class="border-t border-gray-100">
       <button id="configToggle" class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50">
         <span class="font-medium">布号配置管理</span>
@@ -117,26 +96,11 @@
             <i class="fa fa-plus mr-1"></i>添加配置
           </button>
         </div>
-        
-        <!-- 导入/导出功能 -->
-        <div class="mb-4 p-3 bg-white rounded-lg">
-          <h3 class="font-medium mb-3 text-gray-800">配置导入/导出</h3>
-          <div class="flex space-x-2">
-            <button id="exportBtn" class="flex-1 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition-colors">
-              <i class="fa fa-download mr-1"></i>导出配置
-            </button>
-            <button id="importBtn" class="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors">
-              <i class="fa fa-upload mr-1"></i>导入配置
-            </button>
-          </div>
-          <input type="file" id="importFile" class="hidden" accept=".json">
-        </div>
-        
         <div>
           <h3 class="font-medium mb-3 text-gray-800">已配置布号（共<span id="clothCount">0</span>条）</h3>
           <div class="max-h-40 overflow-y-auto bg-white rounded-lg">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 sticky top-0">
+              <thead class="bg-gray-50">
                 <tr>
                   <th class="px-3 py-2 text-left">布号</th>
                   <th class="px-3 py-2 text-left">C/F值</th>
@@ -144,7 +108,25 @@
                 </tr>
               </thead>
               <tbody id="clothList">
-                <!-- 配置列表将通过JavaScript动态生成 -->
+                <!-- 初始示例配置 -->
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-3 py-2">ZJ14299A</td>
+                  <td class="px-3 py-2">5.13344</td>
+                  <td class="px-3 py-2 text-center">
+                    <button onclick="deleteCloth(0)" class="text-red-500 hover:text-red-700">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-3 py-2">OD03186A</td>
+                  <td class="px-3 py-2">2.86523</td>
+                  <td class="px-3 py-2 text-center">
+                    <button onclick="deleteCloth(1)" class="text-red-500 hover:text-red-700">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -152,8 +134,6 @@
       </div>
     </div>
   </div>
-
-  <!-- 导入成功提示 -->
-  <div id="importSuccess" class="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg hidden fade-in">
-    <i class="fa fa-check-circle mr-2"></i>配置导入成功！
-  </div>
+  <script src="script.js"></script>
+</body>
+</html>
