@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TOPT 布号计算器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .input-focus {
+        @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+      }
+      .card-shadow {
+        @apply shadow-lg shadow-blue-100;
+      }
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1E40AF',
+            secondary: '#3B82F6',
+          },
+        },
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+  <div class="max-w-md mx-auto bg-white rounded-xl overflow-hidden card-shadow">
+    <!-- 头部 -->
+    <div class="bg-primary p-4 text-white">
+      <div class="flex items-center justify-between">
+        <img src="logo.png" alt="TOP Textiles" class="h-10">
+        <h1 class="text-xl font-bold">TOPT 布号计算器</h1>
+      </div>
+    </div>
+    <div class="bg-gray-50 px-4 py-2 text-right text-gray-600 text-sm">
+      作者：刘洋 | 部门：CPO
+    </div>
+
+    <!-- 计算区域 -->
+    <div class="p-6">
+      <div class="mb-5">
+        <label class="block text-gray-700 mb-2 font-medium">布号（8位，如ZJ14299A）</label>
+        <div class="relative">
+          <input type="text" id="clothNo" placeholder="输入8位布号" 
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
+                 maxlength="8">
+          <span id="clothValid" class="hidden absolute right-3 top-3 text-sm"></span>
+        </div>
+      </div>
+      <div class="mb-5">
+        <label class="block text-gray-700 mb-2 font-medium">C/F值</label>
+        <div class="bg-gray-50 px-4 py-3 border border-gray-300 rounded-lg">
+          <span id="cfValue" class="text-lg font-medium text-primary">未查询到</span>
+        </div>
+      </div>
+      <div class="mb-5">
+        <label class="block text-gray-700 mb-2 font-medium">
+          <i class="fa fa-arrows-h mr-2"></i>米长（M）
+        </label>
+        <input type="number" id="length" placeholder="输入米长" 
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
+               step="0.01">
+      </div>
+      <div class="mb-5">
+        <label class="block text-gray-700 mb-2 font-medium">
+          <i class="fa fa-balance-scale mr-2"></i>重量（KG）
+        </label>
+        <input type="number" id="weight" placeholder="输入重量" 
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus"
+               step="0.01">
+      </div>
+      <div id="result" class="text-center py-2 text-gray-600"></div>
+    </div>
+
+    <!-- 配置表管理（简化版，手动维护配置） -->
+    <div class="border-t border-gray-100">
+      <button id="configToggle" class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50">
+        <span class="font-medium">布号配置管理</span>
+        <i class="fa fa-chevron-down transition-transform duration-300" id="configIcon"></i>
+      </button>
+      <div id="configPanel" class="hidden p-4 bg-gray-50 border-t border-gray-100">
+        <div class="mb-4 p-3 bg-white rounded-lg">
+          <h3 class="font-medium mb-3 text-gray-800">新增布号配置</h3>
+          <input type="text" id="newClothNo" placeholder="8位布号" 
+                 class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus"
+                 maxlength="8">
+          <input type="number" id="newCF" placeholder="C/F值（如2.86523）" 
+                 class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus"
+                 step="0.00001">
+          <button onclick="addCloth()" class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition-colors">
+            <i class="fa fa-plus mr-1"></i>添加配置
+          </button>
+        </div>
+        <div>
+          <h3 class="font-medium mb-3 text-gray-800">已配置布号（共<span id="clothCount">0</span>条）</h3>
+          <div class="max-h-40 overflow-y-auto bg-white rounded-lg">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-2 text-left">布号</th>
+                  <th class="px-3 py-2 text-left">C/F值</th>
+                  <th class="px-3 py-2 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="clothList">
+                <!-- 初始示例配置 -->
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-3 py-2">ZJ14299A</td>
+                  <td class="px-3 py-2">5.13344</td>
+                  <td class="px-3 py-2 text-center">
+                    <button onclick="deleteCloth(0)" class="text-red-500 hover:text-red-700">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-3 py-2">OD03186A</td>
+                  <td class="px-3 py-2">2.86523</td>
+                  <td class="px-3 py-2 text-center">
+                    <button onclick="deleteCloth(1)" class="text-red-500 hover:text-red-700">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
