@@ -67,11 +67,11 @@ clothNoInput.addEventListener('input', () => {
   const value = clothNoInput.value.trim();
   if (value.length === 8) {
     clothValidEl.textContent = '✓ 格式正确';
-    clothValidEl.className = 'absolute right-3 top-3 text-sm text-green-500';
+    clothValidEl.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-500';
     queryCFValue(value);
   } else if (value.length > 0) {
     clothValidEl.textContent = '请输入8位布号';
-    clothValidEl.className = 'absolute right-3 top-3 text-sm text-red-500';
+    clothValidEl.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm text-red-500';
     cfValueEl.textContent = '未查询到';
   } else {
     clothValidEl.className = 'hidden';
