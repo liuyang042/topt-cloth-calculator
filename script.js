@@ -53,6 +53,7 @@ let clothData = [
   { clothNo: "ZRP0014A", cf: 4.381832 },
   { clothNo: "ZRP0026A", cf: 2.997741 },
   { clothNo: "ZRP0030A", cf: 4.351556 },
+  { clothNo: "ZJ14666A", cf: 4.976888 },
 ];
 
 // 配置面板折叠/展开
@@ -195,3 +196,4 @@ function clearAllData() {
 window.onload = function() {
   renderClothList();
 };
+
