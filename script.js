@@ -28,6 +28,7 @@ let clothData = [
   { clothNo: "ZH00063A", cf: 2.278241 },
   { clothNo: "ZH00052A", cf: 3.128636 },
   { clothNo: "ZH00064A", cf: 3.128636 },
+  { clothNo: "ZH00065A", cf: 3.128636 },
   { clothNo: "ZHP0026A", cf: 2.676390 },
   { clothNo: "ZHP0041A", cf: 2.585356 },
   { clothNo: "ZHP0045A", cf: 2.585356 },
@@ -53,6 +54,7 @@ let clothData = [
   { clothNo: "ZRP0014A", cf: 4.381832 },
   { clothNo: "ZRP0026A", cf: 2.997741 },
   { clothNo: "ZRP0030A", cf: 4.351556 },
+  { clothNo: "ZRP0035A", cf: 4.473237 },
   { clothNo: "ZJ14666A", cf: 4.976888 },
   { clothNo: "ZJ14864A", cf: 5.812916 },
 ];
@@ -197,5 +199,6 @@ function clearAllData() {
 window.onload = function() {
   renderClothList();
 };
+
 
 
