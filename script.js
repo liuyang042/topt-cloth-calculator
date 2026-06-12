@@ -61,7 +61,6 @@ let clothData = [
   { clothNo: "OJ09107A", cf: 5.579954 },
   { clothNo: "OR06195A", cf: 2.327745 },
   { clothNo: "ZA03573A", cf: 4.424922 },
-  { clothNo: "ZH00081A", cf: 3.996373 },
   { clothNo: "ZH00081A", cf: 3.939295 },
   { clothNo: "ZHP0075A", cf: 2.643807 },
   { clothNo: "ZHP0078A", cf: 2.650465 },
