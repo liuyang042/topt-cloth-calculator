@@ -57,6 +57,28 @@ let clothData = [
   { clothNo: "ZRP0035A", cf: 4.473237 },
   { clothNo: "ZJ14666A", cf: 4.976888 },
   { clothNo: "ZJ14864A", cf: 5.812916 },
+  { clothNo: "OD03458A", cf: 2.631952 },
+  { clothNo: "OJ09107A", cf: 5.579954 },
+  { clothNo: "OR06195A", cf: 2.327745 },
+  { clothNo: "ZA03573A", cf: 4.424922 },
+  { clothNo: "ZH00081A", cf: 3.996373 },
+  { clothNo: "ZH00081A", cf: 3.939295 },
+  { clothNo: "ZHP0075A", cf: 2.643807 },
+  { clothNo: "ZHP0078A", cf: 2.650465 },
+  { clothNo: "ZHP0100A", cf: 2.676390 },
+  { clothNo: "ZJ14429A", cf: 4.133650 },
+  { clothNo: "ZJ15249A", cf: 5.812916 },
+  { clothNo: "ZJ15250A", cf: 5.542249 },
+  { clothNo: "ZJ15283A", cf: 4.976888 },
+  { clothNo: "ZJH0033A", cf: 6.111378 },
+  { clothNo: "ZJH0034A", cf: 6.111378 },
+  { clothNo: "ZJH0035A", cf: 6.111378 },
+  { clothNo: "ZJM0411C", cf: 3.821148 },
+  { clothNo: "ZRP0033A", cf: 2.976208 },
+  { clothNo: "ZRP0034A", cf: 3.432779 },
+  { clothNo: "ZRP0034A", cf: 3.329885 },
+  { clothNo: "ZRP0037A", cf: 4.351556 },
+  { clothNo: "ZRP0038A", cf: 4.351556 }
 ];
 
 // 配置面板折叠/展开
