@@ -78,6 +78,7 @@ let clothData = [
   { clothNo: "ZRP0034A", cf: 3.329885 },
   { clothNo: "ZRP0037A", cf: 4.351556 },
   { clothNo: "ZRP0038A", cf: 4.351556 },
+  { clothNo: "ZJH0037A", cf: 6.111378 },
   { clothNo: "ZJ15277A", cf: 3.796446 }
 ];
 
