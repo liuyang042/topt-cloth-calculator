@@ -7,31 +7,35 @@
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <style type="text/tailwindcss">
     @layer utilities {
-      .input-focus {
-        @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-      }
-      .card-shadow {
-        @apply shadow-lg shadow-blue-100/30 hover:shadow-xl hover:shadow-blue-100/50 transition-shadow duration-300;
-      }
-      .btn-hover {
-        @apply hover:bg-blue-600 hover:text-white transition-all duration-200;
-      }
+      .input-focus { @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent; }
+      .card-shadow { @apply shadow-lg shadow-blue-100/30 hover:shadow-xl hover:shadow-blue-100/50 transition-shadow duration-300; }
+      .btn-hover { @apply hover:bg-blue-600 hover:text-white transition-all duration-200; }
     }
+  </style>
+  <style>
+    /* 模糊查询下拉框：浮层、最大高度内滚动、淡入 */
+    #suggestBox {
+      display: none;
+      position: absolute;
+      left: 0; right: 0; top: 100%;
+      margin-top: .25rem;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: .5rem;
+      box-shadow: 0 10px 25px -5px rgba(22,93,255,.15);
+      max-height: 14rem;
+      overflow-y: auto;
+      z-index: 40;
+    }
+    #suggestBox:not(.hidden) { display: block; }
+    .suggest-item:hover { background: #eff6ff; }
   </style>
   <script>
     tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#165DFF',
-            secondary: '#36BFFA',
-            neutral: '#F5F7FA',
-          },
-          fontFamily: {
-            inter: ['Inter', 'system-ui', 'sans-serif'],
-          },
-        },
-      }
+      theme: { extend: {
+        colors: { primary: '#165DFF', secondary: '#36BFFA', neutral: '#F5F7FA' },
+        fontFamily: { inter: ['Inter', 'system-ui', 'sans-serif'] },
+      } }
     }
   </script>
 </head>
@@ -39,13 +43,12 @@
 <body class="bg-gradient-to-br from-neutral to-blue-50 min-h-screen p-4 md:p-8 font-inter">
   <!-- 主卡片 -->
   <div class="max-w-md mx-auto bg-white rounded-2xl overflow-hidden card-shadow">
-    <!-- 头部区域（作者和部门在标题下方同一行靠右） -->
+    <!-- 头部区域 -->
     <div class="bg-gradient-to-r from-primary to-secondary p-5 text-white">
-      <div class="flex items-center mb-2"> <!-- 图标+标题 -->
+      <div class="flex items-center mb-2">
         <img src="logo.png" alt="公司标识" class="h-10 w-10 rounded-lg mr-3">
         <h1 class="text-xl md:text-2xl font-bold">TOPT 布号计算器(TORAY)</h1>
       </div>
-      <!-- 作者和部门同一行靠右对齐 -->
       <div class="flex justify-end text-sm opacity-90 space-x-4">
         <p>作者：刘洋</p>
         <p>部门：CPO</p>
@@ -54,19 +57,21 @@
 
     <!-- 计算区域 -->
     <div class="p-5 md:p-6">
-      <!-- 布号输入（带清空按钮） -->
+      <!-- 布号输入（带清空按钮 + 模糊查询下拉） -->
       <div class="mb-5 md:mb-6">
         <div class="flex items-center justify-between mb-2">
-          <label class="text-gray-700 font-medium">布号（8位，例如ZJ14299A）</label>
-          <button id="clearBtn" onclick="clearAllData()" 
+          <label class="text-gray-700 font-medium">布号（支持模糊查询，例如输入 ZJ14）</label>
+          <button id="clearBtn" onclick="clearAllData()"
                   class="text-gray-500 hover:text-primary text-sm btn-hover px-2 py-1 rounded">
             清空
           </button>
         </div>
         <div class="relative">
-          <input type="text" id="clothNo" placeholder="请输入8位布号" 
+          <input type="text" id="clothNo" placeholder="输入布号，自动匹配" autocomplete="off"
                  class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
           <span id="clothValid" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm"></span>
+          <!-- 模糊查询候选下拉 -->
+          <div id="suggestBox" class="hidden"></div>
         </div>
       </div>
 
@@ -83,7 +88,7 @@
         <label class="block text-gray-700 mb-2 font-medium">
           <i class="fa fa-arrows-h mr-2 text-primary"></i>米长（M）
         </label>
-        <input type="number" id="length" placeholder="输入米长" 
+        <input type="number" id="length" placeholder="输入米长"
                class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
       </div>
 
@@ -92,7 +97,7 @@
         <label class="block text-gray-700 mb-2 font-medium">
           <i class="fa fa-balance-scale mr-2 text-primary"></i>重量（KG）
         </label>
-        <input type="number" id="weight" placeholder="输入重量" 
+        <input type="number" id="weight" placeholder="输入重量"
                class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
       </div>
 
@@ -115,12 +120,15 @@
           <h3 class="font-medium mb-3 text-gray-800 flex items-center">
             <i class="fa fa-plus-circle mr-2 text-primary"></i>新增布号配置
           </h3>
-          <input type="text" id="newClothNo" placeholder="8位布号" 
+          <input type="text" id="newClothNo" placeholder="8位布号"
                  class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus">
-          <input type="number" id="newCF" placeholder="C/F值（例如2.86523）" 
+          <input type="number" id="newCF" placeholder="C/F值（例如2.86523）"
                  class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus">
           <button onclick="addCloth()" class="w-full bg-primary text-white py-2 rounded btn-hover">
             <i class="fa fa-plus mr-1"></i>添加配置
+          </button>
+          <button onclick="resetToDefault()" class="w-full mt-2 text-gray-500 hover:text-primary text-sm py-1">
+            <i class="fa fa-refresh mr-1"></i>恢复默认配置
           </button>
         </div>
 
@@ -131,15 +139,14 @@
           </h3>
           <div class="max-h-40 overflow-y-auto bg-white rounded-lg card-shadow">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50">
+              <thead class="bg-gray-50 sticky top-0">
                 <tr>
                   <th class="px-3 py-2 text-left">布号</th>
                   <th class="px-3 py-2 text-left">C/F值</th>
                   <th class="px-3 py-2 text-center">操作</th>
                 </tr>
               </thead>
-              <tbody id="clothList">
-              </tbody>
+              <tbody id="clothList"></tbody>
             </table>
           </div>
         </div>
@@ -150,6 +157,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
-
-
