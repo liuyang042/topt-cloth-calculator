@@ -1,6 +1,7 @@
 // ==================== 页面元素获取 ====================
 const clothNoInput = document.getElementById('clothNo');
 const cfValueEl = document.getElementById('cfValue');
+const copyCfBtn = document.getElementById('copyCfBtn');
 const lengthInput = document.getElementById('length');
 const weightInput = document.getElementById('weight');
 const resultEl = document.getElementById('result');
@@ -12,7 +13,11 @@ const clothValidEl = document.getElementById('clothValid');
 const newClothNo = document.getElementById('newClothNo');
 const newCF = document.getElementById('newCF');
 const clothList = document.getElementById('clothList');
+const configSearch = document.getElementById('configSearch');
+const configEmpty = document.getElementById('configEmpty');
 const suggestBox = document.getElementById('suggestBox');   // 模糊查询下拉容器
+const recentWrap = document.getElementById('recentWrap');
+const recentChips = document.getElementById('recentChips');
 
 // ==================== 布号配置数据（内置默认值）====================
 const DEFAULT_CLOTH_DATA = [
@@ -50,7 +55,7 @@ const DEFAULT_CLOTH_DATA = [
   { clothNo: "ZJH0037A", cf: 6.111378 }, { clothNo: "ZJ15277A", cf: 3.796446 }
 ];
 
-// ==================== 本地持久化（新增/删除自动保存，刷新不丢失）====================
+// ==================== 本地持久化 ====================
 const STORAGE_KEY = 'topt_cloth_data_v1';
 let clothData = loadClothData();
 
@@ -72,17 +77,51 @@ function resetToDefault() {
     clothData = DEFAULT_CLOTH_DATA.slice();
     saveClothData();
     renderClothList();
+    toast('已恢复默认配置', 'info');
   }
+}
+
+// ==================== Toast 通知（替代阻塞式 alert）====================
+function toast(msg, type) {
+  type = type || 'info';
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icon = type === 'success' ? 'fa-check-circle'
+             : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+  el.innerHTML = '<i class="fa ' + icon + '"></i><span></span>';
+  el.querySelector('span').textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .25s, transform .25s';
+    el.style.opacity = '0'; el.style.transform = 'translateY(-8px)';
+    setTimeout(() => el.remove(), 250);
+  }, 2200);
+}
+
+// ==================== 结果横幅（替代纯文本提示）====================
+function setResult(type, msg) {
+  if (!type) { resultEl.className = 'hidden'; resultEl.innerHTML = ''; return; }
+  const map = {
+    success: ['bg-green-50 text-green-700', 'fa-check-circle'],
+    warn:    ['bg-amber-50 text-amber-700',   'fa-exclamation-triangle'],
+    error:   ['bg-red-50 text-red-700',        'fa-times-circle']
+  };
+  const [cls, icon] = map[type] || map.success;
+  resultEl.className = 'flex items-center gap-2 mt-2 px-4 py-3 rounded-lg text-sm font-medium ' + cls;
+  resultEl.innerHTML = '<i class="fa ' + icon + '"></i><span></span>';
+  resultEl.querySelector('span').textContent = msg;
 }
 
 // ==================== 配置面板折叠/展开 ====================
 configToggle.addEventListener('click', () => {
-  configPanel.classList.toggle('hidden');
+  const hidden = configPanel.classList.toggle('hidden');
   configIcon.classList.toggle('rotate-180');
+  configToggle.setAttribute('aria-expanded', String(!hidden));
   updateClothCount();
 });
 
-// ==================== 布号模糊查询（核心增强）====================
+// ==================== 布号模糊查询 ====================
 let suggestMatches = [];   // 当前候选列表
 let activeIndex = -1;      // 键盘高亮索引
 
@@ -98,7 +137,8 @@ clothNoInput.addEventListener('input', () => {
     hideSuggest();
     clothValidEl.className = 'hidden';
     cfValueEl.textContent = '未查询到';
-    resultEl.textContent = '';
+    toggleCopyCf(false);
+    setResult('');
     return;
   }
 
@@ -120,10 +160,12 @@ clothNoInput.addEventListener('input', () => {
     clothValidEl.textContent = matches.length + ' 条匹配';
     clothValidEl.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm text-blue-500';
     cfValueEl.textContent = '请从下拉中选择';
+    toggleCopyCf(false);
   } else {
     clothValidEl.textContent = '未匹配到';
     clothValidEl.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm text-red-500';
     cfValueEl.textContent = '未查询到';
+    toggleCopyCf(false);
   }
 });
 
@@ -137,6 +179,7 @@ function renderSuggest(matches, keyword) {
     const div = document.createElement('div');
     div.className = 'suggest-item px-4 py-2 cursor-pointer flex items-center justify-between';
     div.dataset.index = i;
+    div.setAttribute('role', 'option');
     div.innerHTML = '<span>' + highlight(it.clothNo, keyword) + '</span>'
                   + '<span class="text-xs text-gray-400">C/F ' + it.cf + '</span>';
     div.addEventListener('mousedown', (e) => { e.preventDefault(); chooseSuggestion(i); });
@@ -166,6 +209,7 @@ function chooseSuggestion(i) {
   clothValidEl.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-500';
   hideSuggest();
   queryCFValue(it.clothNo);
+  lengthInput.focus();   // 选完布号自动跳到米长，加速录入流转
 }
 
 function hideSuggest() {
@@ -178,7 +222,8 @@ function hideSuggest() {
 // 键盘操作：↑↓ 选择、Enter 确认、Esc 关闭
 clothNoInput.addEventListener('keydown', (e) => {
   if (suggestBox.classList.contains('hidden')) return;
-  if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, 49); highlightActive(); }
+  const max = suggestMatches.length - 1;
+  if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, max); highlightActive(); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); highlightActive(); }
   else if (e.key === 'Enter') {
     if (activeIndex >= 0) { e.preventDefault(); chooseSuggestion(activeIndex); }
@@ -195,23 +240,92 @@ document.addEventListener('click', (e) => {
   if (e.target !== clothNoInput && !suggestBox.contains(e.target)) hideSuggest();
 });
 
+// ==================== C/F 复制按钮 ====================
+function toggleCopyCf(show) {
+  copyCfBtn.className = show
+    ? 'flex items-center gap-1 text-xs text-gray-400 hover:text-primary'
+    : 'hidden';
+}
+function copyCF() {
+  const v = cfValueEl.textContent;
+  if (!v || v === '未查询到' || isNaN(parseFloat(v))) return;
+  const done = () => toast('已复制 C/F 值：' + v, 'success');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(v).then(done).catch(() => fallbackCopy(v, done));
+  } else { fallbackCopy(v, done); }
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) {}
+  ta.remove();
+}
+
+// ==================== 最近查询 ====================
+const RECENT_KEY = 'topt_recent_v1';
+let recentList = loadRecent();
+
+function loadRecent() {
+  try {
+    const saved = localStorage.getItem(RECENT_KEY);
+    if (saved) { const arr = JSON.parse(saved); if (Array.isArray(arr)) return arr.slice(0, 6); }
+  } catch (e) {}
+  return [];
+}
+function saveRecent() { try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentList)); } catch (e) {} }
+function addRecent(clothNo) {
+  const key = clothNo.toUpperCase();
+  recentList = recentList.filter(x => x.toUpperCase() !== key);
+  recentList.unshift(key);
+  if (recentList.length > 6) recentList = recentList.slice(0, 6);
+  saveRecent();
+  renderRecent();
+}
+function renderRecent() {
+  recentWrap.classList.toggle('hidden', recentList.length === 0);
+  recentChips.innerHTML = '';
+  recentList.forEach(no => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = '<i class="fa fa-bolt"></i>';
+    chip.appendChild(document.createTextNode(no));
+    chip.addEventListener('click', () => chooseRecent(no));
+    recentChips.appendChild(chip);
+  });
+}
+function chooseRecent(no) {
+  clothNoInput.value = no;
+  clothValidEl.textContent = '\u2713 已匹配';
+  clothValidEl.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-500';
+  hideSuggest();
+  queryCFValue(no);
+  lengthInput.focus();
+}
+function clearRecent() {
+  recentList = []; saveRecent(); renderRecent();
+}
+
 // ==================== 查询C/F值 ====================
 function queryCFValue(clothNo) {
   const found = clothData.find(item => item.clothNo.toUpperCase() === clothNo.toUpperCase());
   if (found) {
     cfValueEl.textContent = found.cf;
-    resultEl.textContent = '';
+    toggleCopyCf(true);
+    addRecent(clothNo);
+    setResult('');
     if (lengthInput.value) calculate('length');
-    if (weightInput.value) calculate('weight');
+    else if (weightInput.value) calculate('weight');
   } else {
     cfValueEl.textContent = '未查询到';
-    resultEl.textContent = '该布号未配置，请先添加配置';
+    toggleCopyCf(false);
+    setResult('warn', '该布号未配置，请先添加配置');
   }
 }
 
 // ==================== 计算逻辑 ====================
-lengthInput.addEventListener('input', () => calculate('length'));
-weightInput.addEventListener('input', () => calculate('weight'));
+lengthInput.addEventListener('input', () => { calculate('length'); updateFieldClearButtons(); });
+weightInput.addEventListener('input', () => { calculate('weight'); updateFieldClearButtons(); });
 
 function calculate(type) {
   const clothNo = clothNoInput.value.trim();
@@ -219,36 +333,51 @@ function calculate(type) {
   const length = parseFloat(lengthInput.value) || 0;
   const weight = parseFloat(weightInput.value) || 0;
 
-  if (!clothNo || clothNo.length !== 8) { resultEl.textContent = '请先输入完整布号'; return; }
-  if (isNaN(cf) || cf <= 0) { resultEl.textContent = '该布号C/F值无效'; return; }
+  if (!clothNo || clothNo.length !== 8) { setResult('warn', '请先输入完整布号'); return; }
+  if (isNaN(cf) || cf <= 0) { setResult('error', '该布号C/F值无效'); return; }
 
   if (type === 'length' && length > 0) {
     const calcWeight = Math.round(length / cf);
     weightInput.value = calcWeight;
-    resultEl.textContent = '计算完成：' + length + 'M ÷ ' + cf + ' = ' + calcWeight + 'KG';
+    setResult('success', '计算完成：' + length + 'M ÷ ' + cf + ' = ' + calcWeight + 'KG');
   } else if (type === 'weight' && weight > 0) {
     const calcLength = Math.round(weight * cf);
     lengthInput.value = calcLength;
-    resultEl.textContent = '计算完成：' + weight + 'KG × ' + cf + ' = ' + calcLength + 'M';
+    setResult('success', '计算完成：' + weight + 'KG × ' + cf + ' = ' + calcLength + 'M');
   } else if (length === 0 && weight === 0) {
-    resultEl.textContent = '';
+    setResult('');
   }
+  updateFieldClearButtons();
+}
+
+// 字段内联清除按钮
+function updateFieldClearButtons() {
+  document.getElementById('clearLength').classList.toggle('show', lengthInput.value !== '');
+  document.getElementById('clearWeight').classList.toggle('show', weightInput.value !== '');
+}
+function clearField(id) {
+  if (id === 'length') lengthInput.value = '';
+  else weightInput.value = '';
+  if (!lengthInput.value && !weightInput.value) setResult('');
+  updateFieldClearButtons();
+  document.getElementById(id).focus();
 }
 
 // ==================== 配置表管理 ====================
 function addCloth() {
   const clothNo = newClothNo.value.trim().toUpperCase();
   const cf = newCF.value.trim();
-  if (clothNo.length !== 8) { alert('请输入8位布号'); return; }
-  if (!cf || isNaN(parseFloat(cf)) || parseFloat(cf) <= 0) { alert('请输入有效的C/F值'); return; }
+  if (clothNo.length !== 8) { toast('请输入8位布号', 'error'); return; }
+  if (!cf || isNaN(parseFloat(cf)) || parseFloat(cf) <= 0) { toast('请输入有效的C/F值', 'error'); return; }
   if (clothData.some(item => item.clothNo.toUpperCase() === clothNo)) {
-    alert('该布号已存在（不区分大小写）'); return;
+    toast('该布号已存在（不区分大小写）', 'error'); return;
   }
   clothData.push({ clothNo, cf: parseFloat(cf) });
   saveClothData();
   renderClothList();
   newClothNo.value = '';
   newCF.value = '';
+  toast('已添加布号 ' + clothNo, 'success');
 }
 
 function deleteCloth(index) {
@@ -258,16 +387,22 @@ function deleteCloth(index) {
     clothData.splice(index, 1);
     saveClothData();
     renderClothList();
-    // 修正原逻辑：先记录被删布号再比对，避免 splice 后索引错位漏判
+    // 先记录被删布号再比对，避免 splice 后索引错位漏判
     if (clothNoInput.value.trim().toUpperCase() === target.clothNo.toUpperCase()) {
       cfValueEl.textContent = '未查询到';
+      toggleCopyCf(false);
     }
+    toast('已删除布号 ' + target.clothNo, 'info');
   }
 }
 
 function renderClothList() {
+  const kw = (configSearch.value || '').trim().toUpperCase();
   clothList.innerHTML = '';
+  let shown = 0;
   clothData.forEach((item, index) => {
+    if (kw && !item.clothNo.toUpperCase().includes(kw)) return;
+    shown++;
     const row = document.createElement('tr');
     row.className = 'border-b border-gray-100 hover:bg-gray-50';
     row.innerHTML =
@@ -280,6 +415,7 @@ function renderClothList() {
       '</td>';
     clothList.appendChild(row);
   });
+  configEmpty.classList.toggle('hidden', shown !== 0);
   updateClothCount();
 }
 
@@ -291,12 +427,16 @@ function clearAllData() {
   lengthInput.value = '';
   weightInput.value = '';
   cfValueEl.textContent = '未查询到';
-  resultEl.textContent = '';
+  toggleCopyCf(false);
+  setResult('');
   clothValidEl.className = 'hidden';
   hideSuggest();
+  updateFieldClearButtons();
 }
 
 // ==================== 页面初始化 ====================
 window.onload = function () {
   renderClothList();
+  renderRecent();
+  updateFieldClearButtons();
 };

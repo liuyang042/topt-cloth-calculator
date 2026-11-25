@@ -13,22 +13,39 @@
     }
   </style>
   <style>
-    /* 模糊查询下拉框：浮层、最大高度内滚动、淡入 */
+    /* 模糊查询下拉框 */
     #suggestBox {
       display: none;
-      position: absolute;
-      left: 0; right: 0; top: 100%;
-      margin-top: .25rem;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: .5rem;
+      position: absolute; left: 0; right: 0; top: 100%;
+      margin-top: .25rem; background: #fff;
+      border: 1px solid #e5e7eb; border-radius: .5rem;
       box-shadow: 0 10px 25px -5px rgba(22,93,255,.15);
-      max-height: 14rem;
-      overflow-y: auto;
-      z-index: 40;
+      max-height: 14rem; overflow-y: auto; z-index: 40;
     }
-    #suggestBox:not(.hidden) { display: block; }
+    #suggestBox:not(.hidden) { display: block; animation: pop .12s ease-out; }
+    @keyframes pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
     .suggest-item:hover { background: #eff6ff; }
+
+    /* 最近查询标签 */
+    .chip { display:inline-flex; align-items:center; gap:.25rem; font-size:.75rem;
+      padding:.25rem .75rem; border-radius:9999px; cursor:pointer; user-select:none;
+      background:#eff6ff; color:#165DFF; border:1px solid #dbeafe; transition:all .15s; }
+    .chip:hover { background:#dbeafe; }
+
+    /* 输入框内联清除按钮 */
+    .field-clear { position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+      color:#9ca3af; opacity:0; pointer-events:none; transition:opacity .15s; background:transparent; }
+    .field-clear.show { opacity:1; pointer-events:auto; }
+    .field-clear:hover { color:#ef4444; }
+
+    /* Toast 通知 */
+    #toastWrap { position:fixed; top:1rem; left:50%; transform:translateX(-50%);
+      z-index:100; display:flex; flex-direction:column; gap:.5rem; width:max-content; max-width:92vw; }
+    .toast { display:flex; align-items:center; gap:.5rem; padding:.6rem 1rem; border-radius:.6rem;
+      color:#fff; font-size:.875rem; box-shadow:0 8px 24px -6px rgba(0,0,0,.25);
+      animation:toastIn .2s ease-out; }
+    @keyframes toastIn { from{opacity:0;transform:translateY(-10px);} to{opacity:1;transform:translateY(0);} }
+    .toast.success { background:#16a34a; } .toast.error { background:#dc2626; } .toast.info { background:#165DFF; }
   </style>
   <script>
     tailwind.config = {
@@ -41,12 +58,15 @@
 </head>
 
 <body class="bg-gradient-to-br from-neutral to-blue-50 min-h-screen p-4 md:p-8 font-inter">
+  <!-- Toast 通知容器 -->
+  <div id="toastWrap"></div>
+
   <!-- 主卡片 -->
   <div class="max-w-md mx-auto bg-white rounded-2xl overflow-hidden card-shadow">
     <!-- 头部区域 -->
     <div class="bg-gradient-to-r from-primary to-secondary p-5 text-white">
       <div class="flex items-center mb-2">
-        <img src="logo.png" alt="公司标识" class="h-10 w-10 rounded-lg mr-3">
+        <i class="fa fa-calculator text-3xl mr-3"></i>
         <h1 class="text-xl md:text-2xl font-bold">TOPT 布号计算器(TORAY)</h1>
       </div>
       <div class="flex justify-end text-sm opacity-90 space-x-4">
@@ -57,57 +77,76 @@
 
     <!-- 计算区域 -->
     <div class="p-5 md:p-6">
-      <!-- 布号输入（带清空按钮 + 模糊查询下拉） -->
-      <div class="mb-5 md:mb-6">
+      <!-- 布号输入 -->
+      <div class="mb-4">
         <div class="flex items-center justify-between mb-2">
-          <label class="text-gray-700 font-medium">布号（支持模糊查询，例如输入 ZJ14）</label>
+          <label for="clothNo" class="text-gray-700 font-medium">布号（支持模糊查询，例如输入 ZJ14）</label>
           <button id="clearBtn" onclick="clearAllData()"
                   class="text-gray-500 hover:text-primary text-sm btn-hover px-2 py-1 rounded">
             清空
           </button>
         </div>
         <div class="relative">
+          <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
           <input type="text" id="clothNo" placeholder="输入布号，自动匹配" autocomplete="off"
-                 class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
+                 class="w-full pl-9 pr-20 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
           <span id="clothValid" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm"></span>
-          <!-- 模糊查询候选下拉 -->
-          <div id="suggestBox" class="hidden"></div>
+          <div id="suggestBox" class="hidden" role="listbox"></div>
         </div>
       </div>
 
+      <!-- 最近查询 -->
+      <div id="recentWrap" class="hidden mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-gray-400"><i class="fa fa-history mr-1"></i>最近查询</span>
+          <button onclick="clearRecent()" class="text-xs text-gray-400 hover:text-red-500">清除记录</button>
+        </div>
+        <div id="recentChips" class="flex flex-wrap gap-2"></div>
+      </div>
+
       <!-- C/F值显示 -->
-      <div class="mb-5 md:mb-6">
+      <div class="mb-5">
         <label class="block text-gray-700 mb-2 font-medium">C/F值</label>
-        <div class="px-4 py-3 border border-gray-200 rounded-lg bg-neutral">
+        <div class="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg bg-neutral">
           <span id="cfValue" class="text-lg font-medium text-primary">未查询到</span>
+          <button id="copyCfBtn" onclick="copyCF()" class="hidden items-center gap-1 text-xs text-gray-400 hover:text-primary">
+            <i class="fa fa-copy"></i>复制
+          </button>
         </div>
       </div>
 
       <!-- 米长输入 -->
-      <div class="mb-5 md:mb-6">
-        <label class="block text-gray-700 mb-2 font-medium">
+      <div class="mb-5">
+        <label for="length" class="block text-gray-700 mb-2 font-medium">
           <i class="fa fa-arrows-h mr-2 text-primary"></i>米长（M）
         </label>
-        <input type="number" id="length" placeholder="输入米长"
-               class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
+        <div class="relative">
+          <input type="number" id="length" placeholder="输入米长自动算重量"
+                 class="w-full px-4 pr-9 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
+          <button class="field-clear" id="clearLength" onclick="clearField('length')"><i class="fa fa-times-circle"></i></button>
+        </div>
       </div>
 
       <!-- 重量输入 -->
-      <div class="mb-5 md:mb-6">
-        <label class="block text-gray-700 mb-2 font-medium">
+      <div class="mb-3">
+        <label for="weight" class="block text-gray-700 mb-2 font-medium">
           <i class="fa fa-balance-scale mr-2 text-primary"></i>重量（KG）
         </label>
-        <input type="number" id="weight" placeholder="输入重量"
-               class="w-full px-4 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
+        <div class="relative">
+          <input type="number" id="weight" placeholder="输入重量自动算米长"
+                 class="w-full px-4 pr-9 py-3 border border-gray-200 rounded-lg input-focus bg-neutral">
+          <button class="field-clear" id="clearWeight" onclick="clearField('weight')"><i class="fa fa-times-circle"></i></button>
+        </div>
       </div>
 
-      <!-- 计算结果提示 -->
-      <div id="result" class="text-center py-3 text-gray-600 font-medium"></div>
+      <!-- 计算结果提示（醒目横幅） -->
+      <div id="result" class="hidden items-center justify-center gap-2 mt-2 px-4 py-3 rounded-lg text-sm font-medium"></div>
     </div>
 
     <!-- 配置表管理区域 -->
     <div class="border-t border-gray-200">
-      <button id="configToggle" class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50 transition-colors">
+      <button id="configToggle" aria-expanded="false"
+              class="w-full flex justify-between items-center p-4 text-gray-700 hover:bg-gray-50 transition-colors">
         <span class="font-medium flex items-center">
           <i class="fa fa-cog mr-2 text-primary"></i>布号配置管理
         </span>
@@ -120,9 +159,9 @@
           <h3 class="font-medium mb-3 text-gray-800 flex items-center">
             <i class="fa fa-plus-circle mr-2 text-primary"></i>新增布号配置
           </h3>
-          <input type="text" id="newClothNo" placeholder="8位布号"
+          <input type="text" id="newClothNo" placeholder="8位布号" autocomplete="off"
                  class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus">
-          <input type="number" id="newCF" placeholder="C/F值（例如2.86523）"
+          <input type="number" step="any" id="newCF" placeholder="C/F值（例如2.86523）"
                  class="w-full px-3 py-2 mb-2 border border-gray-300 rounded input-focus">
           <button onclick="addCloth()" class="w-full bg-primary text-white py-2 rounded btn-hover">
             <i class="fa fa-plus mr-1"></i>添加配置
@@ -137,6 +176,12 @@
           <h3 class="font-medium mb-3 text-gray-800 flex items-center">
             <i class="fa fa-list-alt mr-2 text-primary"></i>已配置布号（共<span id="clothCount">0</span>条）
           </h3>
+          <div class="relative mb-2">
+            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+            <input type="text" id="configSearch" placeholder="搜索布号..." autocomplete="off"
+                   oninput="renderClothList()"
+                   class="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded input-focus">
+          </div>
           <div class="max-h-40 overflow-y-auto bg-white rounded-lg card-shadow">
             <table class="w-full text-sm">
               <thead class="bg-gray-50 sticky top-0">
@@ -148,6 +193,7 @@
               </thead>
               <tbody id="clothList"></tbody>
             </table>
+            <div id="configEmpty" class="hidden text-center text-gray-400 text-sm py-6">没有匹配的布号</div>
           </div>
         </div>
       </div>
