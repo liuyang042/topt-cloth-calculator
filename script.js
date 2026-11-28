@@ -53,6 +53,10 @@ const DEFAULT_CLOTH_DATA = [
   { clothNo: "ZRP0033A", cf: 2.976208 }, { clothNo: "ZRP0034A", cf: 3.432779 },
   { clothNo: "ZRP0037A", cf: 4.351556 }, { clothNo: "ZRP0038A", cf: 4.351556 },
   { clothNo: "ZJH0037A", cf: 6.111378 }, { clothNo: "ZJ15277A", cf: 3.796446 }
+  { clothNo: "ZH00089A", cf: 3.128636 }, { clothNo: "ZH00090A", cf: 3.128636 }
+  { clothNo: "ZH00091A", cf: 2.278241 }, { clothNo: "ZH00092A", cf: 3.939295 }
+  { clothNo: "ZHP0131A", cf: 2.676390 }, { clothNo: "ZHP0132A", cf: 2.702433 }
+  { clothNo: "ZJ15503A", cf: 5.330976 }
 ];
 
 // ==================== 本地持久化 ====================
